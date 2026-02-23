@@ -80,4 +80,4 @@ de dirección. No solo el resultado final.
 
 ## Autor
 
-Renato Cuellar · [LinkedIn](#) · Chile
+Renato Cuellar · https://www.linkedin.com/in/renato-cuellar-pavez/ · Chile
