@@ -4,6 +4,7 @@
 
 import requests
 import time
+from datetime import datetime, timedelta
 from dataclasses import dataclass
 
 
@@ -34,19 +35,21 @@ class NVDConnector:
         self.api_key = api_key
         self.headers = {"apiKey": api_key} if api_key else {}
 
-    def buscar_por_keyword(self, keyword: str, max_resultados: int = 10) -> list[CVE]:
-        params = {
-            "keywordSearch": keyword,
-            "resultsPerPage": max_resultados,
-        }
+    def buscar_por_keyword(
+        self, keyword: str, max_resultados: int = 10, dias_atras: int = 119
+    ) -> list[CVE]:
+        fecha_fin = datetime.utcnow()
+        fecha_inicio = fecha_fin - timedelta(days=dias_atras)
 
         try:
-            response = requests.get(
-                self.BASE_URL,
-                params=params,
-                headers=self.headers,
-                timeout=10
+            url = (
+                f"{self.BASE_URL}"
+                f"?keywordSearch={keyword}"
+                f"&resultsPerPage={max_resultados}"
+                f"&pubStartDate={fecha_inicio.strftime('%Y-%m-%dT00:00:00.000')}"
+                f"&pubEndDate={fecha_fin.strftime('%Y-%m-%dT23:59:59.999')}"
             )
+            response = requests.get(url, headers=self.headers, timeout=10)
             response.raise_for_status()
             data = response.json()
             return self._parsear_respuesta(data, keyword)
@@ -58,25 +61,22 @@ class NVDConnector:
             print(f"[NVD] Error de conexión: {e}")
             return []
 
-    def buscar_por_activo(self, nombre_software: str) -> list[CVE]:
-        # Extraer solo el nombre del software sin versión para la búsqueda
+    def buscar_por_activo(self, nombre_software: str, dias_atras: int = 119) -> list[CVE]:
         keyword = nombre_software.split(" ")[0]
         time.sleep(0.6)  # Respetar rate limit NVD (sin API key: 5 req/30s)
-        return self.buscar_por_keyword(keyword)
+        return self.buscar_por_keyword(keyword, dias_atras=dias_atras)
 
     def _parsear_respuesta(self, data: dict, software: str) -> list[CVE]:
         cves = []
         for item in data.get("vulnerabilities", []):
             cve_data = item.get("cve", {})
 
-            # Descripción en inglés
             descripciones = cve_data.get("descriptions", [])
             descripcion = next(
                 (d["value"] for d in descripciones if d["lang"] == "en"),
                 "Sin descripción"
             )
 
-            # Score CVSS (v3.1 preferido, v2 como fallback)
             severidad = "DESCONOCIDA"
             score = 0.0
             metricas = cve_data.get("metrics", {})
