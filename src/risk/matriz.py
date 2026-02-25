@@ -1,5 +1,5 @@
 # src/risk/matriz.py
-# Matriz de riesgos 5x5 dinámica — Metodología Ultraport
+# Matriz de riesgos 5x5 dinámica — Metodología corporativa de gestión de riesgos
 # Threat Asset Correlator — Renato Cuellar
 
 import streamlit as st
@@ -11,7 +11,7 @@ from src.risk.correlador import (
 )
 
 
-# Estructura de la matriz según metodología Ultraport
+# Estructura de la matriz según metodología corporativa
 # Filas: Probabilidad (Extrema→Escasa), Columnas: Impacto (Insignificante→Severo)
 MATRIZ_NIVELES = {
     (Probabilidad.EXTREMA, NivelImpacto.INSIGNIFICANTE): 4,
@@ -37,7 +37,7 @@ MATRIZ_NIVELES = {
 
 
 def render_matriz(resultados: list[ResultadoCorrelacion]):
-    st.subheader("Mapa de Calor — Metodología Ultraport")
+    st.subheader("Mapa de Calor — Metodología corporativa de gestión de riesgos")
 
     impactos = [
         NivelImpacto.INSIGNIFICANTE,

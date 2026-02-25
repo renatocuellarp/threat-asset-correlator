@@ -1,5 +1,5 @@
 # src/risk/vista.py
-# Vista de correlación y matriz de riesgos — Metodología Ultraport
+# Vista de correlación y matriz de riesgos — Metodología corporativa de gestión de riesgos
 # Threat Asset Correlator — Renato Cuellar
 
 import streamlit as st

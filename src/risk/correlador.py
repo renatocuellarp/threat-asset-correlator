@@ -1,5 +1,5 @@
 # src/risk/correlador.py
-# Motor de correlación activo-amenaza — Metodología Ultraport/Ultramar
+# Motor de correlación activo-amenaza — Metodología corporativa de gestión de riesgos
 # Threat Asset Correlator — Renato Cuellar
 
 from dataclasses import dataclass
@@ -171,5 +171,5 @@ class Correlador:
             f"Probabilidad {probabilidad.name} ({probabilidad.value}/4) "
             f"basada en score CVSS. "
             f"Impacto {impacto.name} ({impacto.value}/4) "
-            f"basado en criticidad del activo según metodología Ultraport."
+            f"basado en criticidad del activo según metodología corporativa."
         )
