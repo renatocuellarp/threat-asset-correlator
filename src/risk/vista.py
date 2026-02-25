@@ -9,6 +9,7 @@ from src.assets.repositorio import RepositorioActivos
 from src.risk.correlador import Correlador, TipoRiesgo, nivel_riesgo_color
 from src.risk.matriz import render_matriz
 from src.exportacion.exportador import exportar_excel, exportar_pdf
+from src.intel.mitre_connector import MITREConnector
 
 
 def render_correlacion():
@@ -177,6 +178,52 @@ def render_correlacion():
         # ── Matriz de calor ──
         st.divider()
         render_matriz(resultados)
+
+        # ── Técnicas ATT&CK ──
+        st.divider()
+        st.subheader("🎯 Técnicas ATT&CK relevantes")
+
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.caption("Técnicas asociadas al software del activo")
+        with col2:
+            coleccion_seleccionada = st.selectbox(
+                "Colección",
+                options=["enterprise", "ics"],
+                format_func=lambda x: "Enterprise ATT&CK" if x == "enterprise" else "ICS ATT&CK",
+                key="coleccion_attack"
+            )
+
+        if not activo.software:
+            st.info("El activo no tiene software registrado. Agrega software en el inventario para ver técnicas ATT&CK.")
+        else:
+            with st.spinner("Cargando técnicas ATT&CK..."):
+                mitre = MITREConnector()
+                tecnicas_encontradas = []
+
+                for sw in activo.software:
+                    tecnicas = mitre.buscar_por_software(sw, coleccion_seleccionada)
+                    for t in tecnicas:
+                        if not any(e.id == t.id for e in tecnicas_encontradas):
+                            tecnicas_encontradas.append(t)
+
+            if not tecnicas_encontradas:
+                st.info("No se encontraron técnicas ATT&CK para el software registrado en este activo.")
+            else:
+                st.success(f"{len(tecnicas_encontradas)} técnica(s) encontrada(s)")
+
+                datos = []
+                for t in tecnicas_encontradas:
+                    datos.append({
+                        "ID": t.id,
+                        "Técnica": t.nombre,
+                        "Tácticas": ", ".join(t.tacticas),
+                        "Plataformas": ", ".join(t.plataformas),
+                        "Referencia": t.url,
+                    })
+
+                df_attack = pd.DataFrame(datos)
+                st.dataframe(df_attack, use_container_width=True, hide_index=True)
 
         # ── Exportación ──
         st.divider()
