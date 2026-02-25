@@ -36,7 +36,7 @@
 - [x] Conector NVD/CVE con filtro por fecha (119 días)
 - [x] Normalización de datos
 - [ ] Conector OTX AlienVault (IoCs)
-- [ ] Conector MITRE ATT&CK vía TAXII 2.1 — descarga local con caché JSON
+- [x] Conector MITRE ATT&CK vía TAXII 2.1 — descarga local con caché JSON
 
 ---
 
