@@ -7,57 +7,58 @@
 
 ## Fase 1 — Diseño y arquitectura
 **Meta:** Tener el sistema diseñado antes de escribir código  
-**Estado:** 🔨 En curso
+**Estado:** ✅ Completado
 
 - [x] Definir problema y alcance
 - [x] Diseñar arquitectura general
-- [x] Documentar modelo de datos borrador
-- [ ] Definir estructura de la base de datos SQLite
-- [ ] Documentar formato de salida ISO 27001 / ANCI
+- [x] Documentar modelo de datos
+- [x] Documentar formato de salida compatible con metodología corporativa
 
 ---
 
 ## Fase 2 — Módulo de activos
 **Meta:** Inventario funcional con clasificación y criticidad  
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado
 
-- [ ] Modelo de datos de activos
-- [ ] Carga manual (CSV / formulario)
-- [ ] Clasificación por tipo y criticidad
-- [ ] Visualización básica en Streamlit
+- [x] Modelo de datos de activos
+- [x] Carga manual via formulario
+- [x] Clasificación por tipo y criticidad
+- [x] Visualización en Streamlit con filtros
 
 ---
 
 ## Fase 3 — Integraciones de inteligencia
 **Meta:** Conectores funcionando con datos reales  
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado
 
-- [ ] Conector NVD/CVE con filtro por producto/versión
+- [x] Conector NVD/CVE con filtro por fecha (119 días)
+- [x] Normalización de datos
 - [ ] Conector OTX AlienVault (IoCs)
 - [ ] Conector MITRE ATT&CK vía TAXII 2.1
-- [ ] Normalización de datos entre fuentes
 
 ---
 
 ## Fase 4 — Motor de correlación
 **Meta:** Scoring automático con trazabilidad técnica  
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado
 
-- [ ] Algoritmo de correlación activo-amenaza
-- [ ] Cálculo de probabilidad e impacto
-- [ ] Justificación técnica por celda de matriz
-- [ ] Matriz 5x5 dinámica
+- [x] Algoritmo de correlación activo-amenaza
+- [x] Metodología corporativa de gestión de riesgos integrada
+- [x] Escala de probabilidad e impacto de 4 niveles
+- [x] Justificación técnica por celda de matriz
+- [x] Mapa de calor dinámico con CVEs ubicados por celda
 
 ---
 
 ## Fase 5 — Dashboard
 **Meta:** Interfaz usable para profesional de ciberseguridad  
-**Estado:** ⏳ Pendiente
+**Estado:** ✅ Completado
 
-- [ ] Vista de matriz de riesgos interactiva
-- [ ] Detalle por activo y por amenaza
-- [ ] Filtros por criticidad y fuente
-- [ ] Indicadores de tendencia
+- [x] Vista de correlación con tabla coloreada por nivel de riesgo
+- [x] Resumen visual por nivel (EXTREMO / ALTO / MODERADO / BAJO)
+- [x] Detalle y justificación técnica por CVE
+- [x] Tema oscuro con identidad visual consistente
+- [x] Tarjetas de activo con etiquetas de software
 
 ---
 
@@ -68,6 +69,20 @@
 - [ ] Exportación compatible con ISO 27001
 - [ ] Formato de reporte para ANCI
 - [ ] Versión ejecutiva de una página
+
+---
+
+## Fase 7 — Mejoras para producción
+**Meta:** Hacer la herramienta viable en entorno corporativo real  
+**Estado:** 📋 Planificado
+
+- [ ] Importación de activos desde CSV (integración con herramienta de inventario)
+- [ ] Importación de activos y riesgos desde Excel
+- [ ] Migración de base de datos JSON → SQLite o PostgreSQL
+- [ ] Autenticación corporativa via Microsoft Entra ID (Azure AD) con MSAL
+- [ ] Control de acceso por grupos de Azure AD
+- [ ] Conector OTX AlienVault
+- [ ] Conector MITRE ATT&CK vía TAXII 2.1
 
 ---
 
