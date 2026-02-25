@@ -1,99 +1,176 @@
 # src/assets/vista.py
-# Interfaz Streamlit para gestión de activos
+# Vista de inventario de activos
 # Threat Asset Correlator — Renato Cuellar
 
 import streamlit as st
 from src.assets.modelo import Activo, TipoActivo, Criticidad
 from src.assets.repositorio import RepositorioActivos
-import pandas as pd
 
 
-def render_inventario():
-    st.title("Inventario de Activos")
+def render_activos():
+    st.title("🗂️ Inventario de Activos")
 
     repo = RepositorioActivos()
 
-    # ── Formulario para agregar activo ──
-    with st.expander("➕ Agregar nuevo activo", expanded=False):
-        with st.form("form_activo"):
-            nombre = st.text_input("Nombre del activo")
-            tipo = st.selectbox(
-                "Tipo",
-                options=[t.value for t in TipoActivo]
+    tab1, tab2 = st.tabs(["📋 Inventario", "➕ Agregar activo"])
+
+    with tab1:
+        activos = repo.cargar()
+
+        if not activos:
+            st.info("No hay activos registrados. Agrega uno en la pestaña 'Agregar activo'.")
+            return
+
+        col1, col2 = st.columns(2)
+        with col1:
+            filtro_tipo = st.selectbox(
+                "Filtrar por tipo",
+                options=["Todos"] + [t.value for t in TipoActivo]
             )
-            criticidad = st.selectbox(
-                "Criticidad",
-                options=[c.name for c in Criticidad],
-                index=2  # MEDIA por defecto
-            )
-            propietario = st.text_input("Propietario")
-            descripcion = st.text_area("Descripción", height=80)
-            software_raw = st.text_input(
-                "Software instalado (separado por comas)",
-                placeholder="Apache 2.4.54, Ubuntu 22.04"
+        with col2:
+            filtro_crit = st.selectbox(
+                "Criticidad mínima",
+                options=["Todas"] + [c.name for c in Criticidad]
             )
 
-            submitted = st.form_submit_button("Agregar activo")
+        filtrados = activos
+        if filtro_tipo != "Todos":
+            filtrados = [a for a in filtrados if a.tipo.value == filtro_tipo]
+        if filtro_crit != "Todas":
+            nivel = Criticidad[filtro_crit].value
+            filtrados = [a for a in filtrados if a.criticidad.value >= nivel]
+
+        st.markdown(f"**{len(filtrados)} activo(s) encontrado(s)**")
+        st.divider()
+
+        for activo in filtrados:
+            with st.expander(
+                f"**{activo.nombre}** — {activo.tipo.value} | "
+                f"Criticidad: {activo.criticidad.name} | "
+                f"Propietario: {activo.propietario}"
+            ):
+                if st.session_state.get(f"editando_{activo.id}"):
+                    _render_formulario_edicion(activo, repo)
+                else:
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown(f"**ID:** `{activo.id}`")
+                        st.markdown(f"**Tipo:** {activo.tipo.value}")
+                        st.markdown(f"**Criticidad:** {activo.criticidad.name}")
+                        st.markdown(f"**Propietario:** {activo.propietario}")
+                    with col2:
+                        st.markdown(f"**Fecha registro:** {activo.fecha_registro}")
+                        if activo.descripcion:
+                            st.markdown(f"**Descripción:** {activo.descripcion}")
+                        if activo.software:
+                            st.markdown(f"**Software:** {', '.join(activo.software)}")
+
+                    col_edit, col_del, _ = st.columns([1, 1, 4])
+                    with col_edit:
+                        if st.button("✏️ Editar", key=f"btn_edit_{activo.id}"):
+                            st.session_state[f"editando_{activo.id}"] = True
+                            st.rerun()
+                    with col_del:
+                        if st.button("🗑️ Eliminar", key=f"btn_del_{activo.id}"):
+                            st.session_state[f"confirmar_del_{activo.id}"] = True
+                            st.rerun()
+
+                    if st.session_state.get(f"confirmar_del_{activo.id}"):
+                        st.warning(f"¿Eliminar **{activo.nombre}**? Esta acción no se puede deshacer.")
+                        if st.button("✅ Confirmar eliminación", key=f"confirm_si_{activo.id}"):
+                            repo.eliminar(activo.id)
+                            st.session_state.pop(f"confirmar_del_{activo.id}", None)
+                            st.success(f"Activo '{activo.nombre}' eliminado.")
+                            st.rerun()
+                        if st.button("❌ Cancelar eliminación", key=f"confirm_no_{activo.id}"):
+                            st.session_state.pop(f"confirmar_del_{activo.id}", None)
+                            st.rerun()
+
+    with tab2:
+        with st.form("form_agregar_activo", clear_on_submit=True):
+            st.subheader("Nuevo activo")
+
+            col1, col2 = st.columns(2)
+            with col1:
+                nombre = st.text_input("Nombre del activo *")
+                tipo = st.selectbox("Tipo *", options=[t.value for t in TipoActivo])
+                propietario = st.text_input("Propietario *")
+            with col2:
+                criticidad = st.selectbox("Criticidad *", options=[c.name for c in Criticidad])
+                descripcion = st.text_area("Descripción", height=80)
+
+            software_raw = st.text_input(
+                "Software instalado",
+                placeholder="Apache 2.4.54, Ubuntu 22.04, OpenSSL 3.0 (separados por coma)"
+            )
+
+            submitted = st.form_submit_button("➕ Agregar activo", type="primary", use_container_width=True)
 
             if submitted:
                 if not nombre or not propietario:
                     st.error("Nombre y propietario son obligatorios.")
                 else:
-                    try:
-                        software = [s.strip() for s in software_raw.split(",") if s.strip()]
-                        activo = Activo(
-                            nombre=nombre,
-                            tipo=TipoActivo(tipo),
-                            criticidad=Criticidad[criticidad],
-                            propietario=propietario,
-                            descripcion=descripcion,
-                            software=software
-                        )
-                        repo.agregar(activo)
+                    software_lista = [s.strip() for s in software_raw.split(",") if s.strip()]
+                    nuevo = Activo(
+                        nombre=nombre,
+                        tipo=TipoActivo(tipo),
+                        criticidad=Criticidad[criticidad],
+                        propietario=propietario,
+                        descripcion=descripcion,
+                        software=software_lista,
+                    )
+                    if repo.agregar(nuevo):
                         st.success(f"Activo '{nombre}' agregado correctamente.")
-                        st.rerun()
-                    except ValueError as e:
-                        st.error(f"Error: {e}")
+                    else:
+                        st.error("Ya existe un activo con ese ID.")
 
-    # ── Filtros ──
-    st.subheader("Activos registrados")
-    activos = repo.cargar()
 
-    if not activos:
-        st.info("No hay activos registrados aún.")
-        return
+def _render_formulario_edicion(activo: Activo, repo: RepositorioActivos):
+    st.subheader("Editar activo")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        filtro_tipo = st.selectbox(
-            "Filtrar por tipo",
-            options=["Todos"] + [t.value for t in TipoActivo]
+    with st.form(f"form_editar_{activo.id}"):
+        col1, col2 = st.columns(2)
+        with col1:
+            nombre = st.text_input("Nombre", value=activo.nombre)
+            tipo = st.selectbox(
+                "Tipo",
+                options=[t.value for t in TipoActivo],
+                index=[t.value for t in TipoActivo].index(activo.tipo.value)
+            )
+            propietario = st.text_input("Propietario", value=activo.propietario)
+        with col2:
+            criticidad = st.selectbox(
+                "Criticidad",
+                options=[c.name for c in Criticidad],
+                index=[c.name for c in Criticidad].index(activo.criticidad.name)
+            )
+            descripcion = st.text_area("Descripción", value=activo.descripcion, height=80)
+
+        software_raw = st.text_input(
+            "Software instalado",
+            value=", ".join(activo.software)
         )
-    with col2:
-        filtro_criticidad = st.selectbox(
-            "Criticidad mínima",
-            options=["Todas"] + [c.name for c in Criticidad]
+
+        guardar = st.form_submit_button("💾 Guardar cambios", type="primary", use_container_width=True)
+        cancelar = st.form_submit_button("❌ Cancelar", use_container_width=True)
+
+    if guardar:
+        software_lista = [s.strip() for s in software_raw.split(",") if s.strip()]
+        activo_actualizado = Activo(
+            id=activo.id,
+            nombre=nombre,
+            tipo=TipoActivo(tipo),
+            criticidad=Criticidad[criticidad],
+            propietario=propietario,
+            descripcion=descripcion,
+            software=software_lista,
+            fecha_registro=activo.fecha_registro,
         )
+        repo.actualizar(activo_actualizado)
+        st.session_state.pop(f"editando_{activo.id}", None)
+        st.success("Activo actualizado correctamente.")
+        st.rerun()
 
-    # Aplicar filtros
-    if filtro_tipo != "Todos":
-        activos = [a for a in activos if a.tipo.value == filtro_tipo]
-    if filtro_criticidad != "Todas":
-        minima = Criticidad[filtro_criticidad].value
-        activos = [a for a in activos if a.criticidad.value >= minima]
-
-    # ── Tabla ──
-    if activos:
-        df = pd.DataFrame([{
-            "Nombre": a.nombre,
-            "Tipo": a.tipo.value,
-            "Criticidad": a.criticidad.name,
-            "Propietario": a.propietario,
-            "Software": ", ".join(a.software),
-            "Registrado": a.fecha_registro
-        } for a in activos])
-
-        st.dataframe(df, use_container_width=True, hide_index=True)
-        st.caption(f"{len(activos)} activo(s) encontrado(s)")
-    else:
-        st.info("No hay activos que coincidan con los filtros.")
+    if cancelar:
+        st.session_state.pop(f"editando_{activo.id}", None)
+        st.rerun()

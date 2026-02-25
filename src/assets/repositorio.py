@@ -1,5 +1,5 @@
 # src/assets/repositorio.py
-# Repositorio de activos — lectura y escritura en JSON
+# Repositorio de activos con persistencia JSON
 # Threat Asset Correlator — Renato Cuellar
 
 import json
@@ -7,35 +7,55 @@ import os
 from src.assets.modelo import Activo, TipoActivo, Criticidad
 
 
+RUTA_DATOS = "data/activos.json"
+
+
 class RepositorioActivos:
-    def __init__(self, ruta_archivo: str = "data/activos.json"):
-        self.ruta_archivo = ruta_archivo
-        self._asegurar_directorio()
-
-    def _asegurar_directorio(self):
-        directorio = os.path.dirname(self.ruta_archivo)
-        if directorio and not os.path.exists(directorio):
-            os.makedirs(directorio)
-
-    def guardar(self, activos: list[Activo]) -> None:
-        datos = [a.to_dict() for a in activos]
-        with open(self.ruta_archivo, "w", encoding="utf-8") as f:
-            json.dump(datos, f, ensure_ascii=False, indent=2)
+    def __init__(self, ruta: str = RUTA_DATOS):
+        self.ruta = ruta
+        os.makedirs(os.path.dirname(ruta), exist_ok=True)
 
     def cargar(self) -> list[Activo]:
-        if not os.path.exists(self.ruta_archivo):
+        if not os.path.exists(self.ruta):
             return []
-        with open(self.ruta_archivo, "r", encoding="utf-8") as f:
+        with open(self.ruta, "r", encoding="utf-8") as f:
             datos = json.load(f)
-        return [self._dict_a_activo(d) for d in datos]
+        return [self._deserializar(d) for d in datos]
 
-    def agregar(self, activo: Activo) -> None:
+    def guardar(self, activos: list[Activo]) -> None:
+        with open(self.ruta, "w", encoding="utf-8") as f:
+            json.dump([self._serializar(a) for a in activos], f, indent=2, ensure_ascii=False)
+
+    def agregar(self, activo: Activo) -> bool:
         activos = self.cargar()
-        # Evitar duplicados por ID
         if any(a.id == activo.id for a in activos):
-            raise ValueError(f"Ya existe un activo con ID: {activo.id}")
+            return False
         activos.append(activo)
         self.guardar(activos)
+        return True
+
+    def actualizar(self, activo_actualizado: Activo) -> bool:
+        activos = self.cargar()
+        for i, a in enumerate(activos):
+            if a.id == activo_actualizado.id:
+                activos[i] = activo_actualizado
+                self.guardar(activos)
+                return True
+        return False
+
+    def eliminar(self, activo_id: str) -> bool:
+        activos = self.cargar()
+        nuevos = [a for a in activos if a.id != activo_id]
+        if len(nuevos) == len(activos):
+            return False
+        self.guardar(nuevos)
+        return True
+
+    def buscar_por_id(self, activo_id: str) -> Activo | None:
+        for a in self.cargar():
+            if a.id == activo_id:
+                return a
+        return None
 
     def buscar_por_tipo(self, tipo: TipoActivo) -> list[Activo]:
         return [a for a in self.cargar() if a.tipo == tipo]
@@ -43,14 +63,26 @@ class RepositorioActivos:
     def buscar_por_criticidad_minima(self, criticidad: Criticidad) -> list[Activo]:
         return [a for a in self.cargar() if a.criticidad.value >= criticidad.value]
 
-    def _dict_a_activo(self, d: dict) -> Activo:
+    def _serializar(self, activo: Activo) -> dict:
+        return {
+            "id": activo.id,
+            "nombre": activo.nombre,
+            "tipo": activo.tipo.value,
+            "criticidad": activo.criticidad.value,
+            "propietario": activo.propietario,
+            "descripcion": activo.descripcion,
+            "software": activo.software,
+            "fecha_registro": activo.fecha_registro,
+        }
+
+    def _deserializar(self, datos: dict) -> Activo:
         return Activo(
-            id=d["id"],
-            nombre=d["nombre"],
-            tipo=TipoActivo(d["tipo"]),
-            criticidad=Criticidad(d["criticidad"]),
-            propietario=d["propietario"],
-            descripcion=d.get("descripcion", ""),
-            software=d.get("software", []),
-            fecha_registro=d["fecha_registro"],
+            id=datos["id"],
+            nombre=datos["nombre"],
+            tipo=TipoActivo(datos["tipo"]),
+            criticidad=Criticidad(datos["criticidad"]),
+            propietario=datos["propietario"],
+            descripcion=datos.get("descripcion", ""),
+            software=datos.get("software", []),
+            fecha_registro=datos.get("fecha_registro", ""),
         )
