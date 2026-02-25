@@ -109,6 +109,10 @@ class Correlador:
         for software in activo.software:
             cves = self.nvd.buscar_por_activo(software)
             for cve in cves:
+                # Excluir CVEs sin score CVSS conocido
+                if cve.score_cvss == 0.0:
+                    continue
+
                 probabilidad = self._calcular_probabilidad(cve)
                 impacto = self._calcular_impacto(activo, cve, tipo_riesgo)
                 justificacion = self._generar_justificacion(
