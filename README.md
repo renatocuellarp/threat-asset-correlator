@@ -51,12 +51,13 @@ Python · Streamlit · SQLite (prototipo) · APIs REST · TAXII 2.1
 
 | Fase | Descripción | Estado |
 |---|---|---|
-| 1 — Diseño | Arquitectura, modelo de datos, decisiones técnicas | 🔨 En curso |
-| 2 — Assets | Módulo de inventario con clasificación | ⏳ Pendiente |
-| 3 — Intel | Integraciones OTX y NVD | ⏳ Pendiente |
-| 4 — Correlación | Motor de scoring y matriz dinámica | ⏳ Pendiente |
-| 5 — UI | Dashboard Streamlit | ⏳ Pendiente |
+| 1 — Diseño | Arquitectura, modelo de datos, decisiones técnicas | ✅ Completado |
+| 2 — Assets | Módulo de inventario con clasificación | ✅ Completado |
+| 3 — Intel | Integraciones OTX y NVD | 🔨 En curso |
+| 4 — Correlación | Motor de scoring y matriz dinámica | ✅ Completado |
+| 5 — UI | Dashboard Streamlit | ✅ Completado |
 | 6 — Exportación | Salidas ISO 27001 / ANCI | ⏳ Pendiente |
+| 7 — Producción | Importaciones, BD, autenticación corporativa | 📋 Planificado |
 
 ---
 
