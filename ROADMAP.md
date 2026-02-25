@@ -29,7 +29,7 @@
 
 ## Fase 3 — Integraciones de inteligencia
 **Meta:** Conectores funcionando con datos reales  
-**Estado:** ✅ Completado
+***Estado:** 🔨 En curso
 
 - [x] Conector NVD/CVE con filtro por fecha (119 días)
 - [x] Normalización de datos
