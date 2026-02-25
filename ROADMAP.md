@@ -24,6 +24,8 @@
 - [x] Carga manual via formulario
 - [x] Clasificación por tipo y criticidad
 - [x] Visualización en Streamlit con filtros
+- [x] Edición de activos existentes
+- [x] Eliminación de activos con confirmación
 
 ---
 
@@ -34,7 +36,7 @@
 - [x] Conector NVD/CVE con filtro por fecha (119 días)
 - [x] Normalización de datos
 - [ ] Conector OTX AlienVault (IoCs)
-- [ ] Conector MITRE ATT&CK vía TAXII 2.1
+- [ ] Conector MITRE ATT&CK vía TAXII 2.1 — descarga local con caché JSON
 
 ---
 
@@ -47,6 +49,8 @@
 - [x] Escala de probabilidad e impacto de 4 niveles
 - [x] Justificación técnica por celda de matriz
 - [x] Mapa de calor dinámico con CVEs ubicados por celda
+- [x] Exportación Excel — 3 hojas: resumen, correlaciones, justificación técnica
+- [x] Exportación PDF — reporte estructurado con tablas y colores por nivel
 
 ---
 
