@@ -10,7 +10,41 @@ from src.risk.matriz import render_matriz
 
 
 def render_correlacion():
-    st.title("Correlación de Amenazas")
+    st.markdown("""
+        <style>
+        .activo-card {
+            background-color: #1a1d24;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 8px;
+            border-left: 4px solid #c0392b;
+        }
+        .activo-card h4 {
+            margin: 0 0 4px 0;
+            color: #aaa;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .activo-card p {
+            margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .software-tag {
+            display: inline-block;
+            background-color: #2a2d34;
+            border-radius: 20px;
+            padding: 3px 12px;
+            margin: 3px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.title("🔍 Correlación de Amenazas")
 
     repo = RepositorioActivos()
     activos = repo.cargar()
@@ -34,20 +68,42 @@ def render_correlacion():
         tipo_seleccionado = st.selectbox(
             "Tipo de riesgo",
             options=list(tipo_riesgo_opciones.keys()),
-            index=2  # Excelencia Operacional por defecto
+            index=2
         )
 
     activo = activo_nombres[seleccionado]
     tipo_riesgo = tipo_riesgo_opciones[tipo_seleccionado]
 
-    # ── Métricas del activo ──
+    # ── Tarjetas del activo ──
     col1, col2, col3 = st.columns(3)
-    col1.metric("Tipo", activo.tipo.value)
-    col2.metric("Criticidad", activo.criticidad.name)
-    col3.metric("Propietario", activo.propietario)
+
+    with col1:
+        st.markdown(f"""
+            <div class='activo-card'>
+                <h4>Tipo</h4>
+                <p>{activo.tipo.value}</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+            <div class='activo-card'>
+                <h4>Criticidad</h4>
+                <p>{activo.criticidad.name}</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown(f"""
+            <div class='activo-card'>
+                <h4>Propietario</h4>
+                <p>{activo.propietario}</p>
+            </div>
+        """, unsafe_allow_html=True)
 
     if activo.software:
-        st.caption(f"Software: {', '.join(activo.software)}")
+        tags = "".join([f"<span class='software-tag'>{s}</span>" for s in activo.software])
+        st.markdown(f"<div style='margin-top:8px'>{tags}</div>", unsafe_allow_html=True)
 
     st.divider()
 
@@ -73,7 +129,7 @@ def render_correlacion():
             color = nivel_riesgo_color(nivel)
             col.markdown(
                 f"<div style='background-color:{color}; padding:10px; "
-                f"border-radius:5px; text-align:center; color:white;'>"
+                f"border-radius:8px; text-align:center; color:white;'>"
                 f"<b>{nivel}</b><br><span style='font-size:24px'>{conteos[nivel]}</span>"
                 f"</div>",
                 unsafe_allow_html=True
@@ -95,7 +151,9 @@ def render_correlacion():
         ]
 
         df_mostrar = df[cols_mostrar].copy()
-        df_mostrar["score_cvss"] = pd.to_numeric(df_mostrar["score_cvss"], errors="coerce").round(1)
+        df_mostrar["score_cvss"] = pd.to_numeric(
+            df_mostrar["score_cvss"], errors="coerce"
+        ).round(1)
 
         styled = df_mostrar.style.map(
             color_nivel, subset=["nivel_riesgo"]
@@ -113,6 +171,7 @@ def render_correlacion():
                 st.write(r.justificacion)
                 st.caption(f"Publicado: {r.cve.fecha_publicacion}")
                 st.caption(f"Descripción: {r.cve.descripcion}")
+
         # ── Matriz de calor ──
         st.divider()
         render_matriz(resultados)
