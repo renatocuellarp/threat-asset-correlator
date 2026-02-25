@@ -4,9 +4,11 @@
 
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 from src.assets.repositorio import RepositorioActivos
 from src.risk.correlador import Correlador, TipoRiesgo, nivel_riesgo_color
 from src.risk.matriz import render_matriz
+from src.exportacion.exportador import exportar_excel, exportar_pdf
 
 
 def render_correlacion():
@@ -175,3 +177,29 @@ def render_correlacion():
         # ── Matriz de calor ──
         st.divider()
         render_matriz(resultados)
+
+        # ── Exportación ──
+        st.divider()
+        st.subheader("Exportar reporte")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            excel_bytes = exportar_excel(activo, resultados, tipo_riesgo)
+            st.download_button(
+                label="📥 Descargar Excel",
+                data=excel_bytes,
+                file_name=f"reporte_{activo.nombre.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True
+            )
+
+        with col2:
+            pdf_bytes = exportar_pdf(activo, resultados, tipo_riesgo)
+            st.download_button(
+                label="📄 Descargar PDF",
+                data=pdf_bytes,
+                file_name=f"reporte_{activo.nombre.lower().replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
