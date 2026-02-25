@@ -94,9 +94,12 @@ def render_correlacion():
             "probabilidad", "impacto", "score_total", "nivel_riesgo"
         ]
 
-        styled = df[cols_mostrar].style.map(
+        df_mostrar = df[cols_mostrar].copy()
+        df_mostrar["score_cvss"] = pd.to_numeric(df_mostrar["score_cvss"], errors="coerce").round(1)
+
+        styled = df_mostrar.style.map(
             color_nivel, subset=["nivel_riesgo"]
-        )
+        ).format({"score_cvss": "{:.1f}"})
 
         st.dataframe(styled, use_container_width=True, hide_index=True)
 
