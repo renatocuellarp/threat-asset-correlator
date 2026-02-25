@@ -6,6 +6,7 @@ import streamlit as st
 import pandas as pd
 from src.assets.repositorio import RepositorioActivos
 from src.risk.correlador import Correlador, TipoRiesgo, nivel_riesgo_color
+from src.risk.matriz import render_matriz
 
 
 def render_correlacion():
@@ -109,3 +110,6 @@ def render_correlacion():
                 st.write(r.justificacion)
                 st.caption(f"Publicado: {r.cve.fecha_publicacion}")
                 st.caption(f"Descripción: {r.cve.descripcion}")
+        # ── Matriz de calor ──
+        st.divider()
+        render_matriz(resultados)
